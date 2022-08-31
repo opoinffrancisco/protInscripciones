@@ -1,1 +1,1 @@
-# protInscripciones
+# protInscripciones: Aplicacion web

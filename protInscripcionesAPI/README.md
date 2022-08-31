@@ -1,1 +1,3 @@
 # protInscripciones
+ * Servidor
+ * Pagina web
