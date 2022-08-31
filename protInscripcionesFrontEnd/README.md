@@ -1,1 +1,2 @@
 # protInscripciones: Aplicacion web
+  * Angular
