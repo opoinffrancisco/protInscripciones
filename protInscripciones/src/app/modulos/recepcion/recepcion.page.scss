@@ -1,0 +1,36 @@
+ion-menu-button {
+  color: var(--ion-color-primary);
+}
+
+#container {
+  padding-top: 10px;
+}
+
+#container strong {
+  font-size: 20px;
+  line-height: 26px;
+}
+
+#container p {
+  font-size: 16px;
+  line-height: 22px;
+  color: #8c8c8c;
+  margin: 0;
+}
+
+#container a {
+  text-decoration: none;
+}
+
+#container .contenido-replicador{
+  border:1px solid var(--ion-color-primary); 
+  width: 90%;
+  height: 150px;
+  margin: auto;
+  margin-bottom: 10px;
+  margin-top: 10px;
+}
+
+.list-md{
+  background: var(--ion-color-transparencia) !important;
+}

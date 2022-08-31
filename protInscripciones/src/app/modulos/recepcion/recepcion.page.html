@@ -1,0 +1,30 @@
+<ion-header [translucent]="true"  collapse="fade">
+  <ion-toolbar>
+    <ion-buttons slot="end">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title> {{ "Anuncios recientes" }}  </ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content id="container" [fullscreen]="true" class="ion-padding">
+
+
+    <ion-list  >
+      <ion-item class="contenido-replicador" lines="none" detail="false"
+         *ngFor="let a of data; index as i;" (click)="verAnuncio(a)">
+        {{ a.titulo }}
+      </ion-item>
+    </ion-list>
+  
+    <ion-infinite-scroll threshold="1px" position="bottom"  (ionInfinite)="loadData($event)">
+      <ion-infinite-scroll-content
+        loadingSpinner="bubbles"
+        loadingText="Buscando anuncios...">
+      </ion-infinite-scroll-content>
+    </ion-infinite-scroll>
+
+
+
+
+</ion-content>

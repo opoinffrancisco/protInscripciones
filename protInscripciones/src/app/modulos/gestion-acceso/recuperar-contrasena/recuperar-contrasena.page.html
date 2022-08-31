@@ -1,0 +1,22 @@
+<ion-content [scrollY]="false" [fullscreen]="true">
+
+  <ion-row id="container">
+    <!--<ion-col class="ion-align-self-start">
+      ion-col [start]
+    </ion-col>-->
+    <ion-col class="ion-align-self-center" [formGroup]="form">
+
+      <ion-item>
+        <ion-label position="stacked">Correo electronico</ion-label>
+        <ion-input type="email" formControlName="email"></ion-input>
+      </ion-item>
+      <ion-button expand="full" [disabled]="form.valid==false" (click)="recuperarContrasena()">Recuperar contraseña</ion-button>
+      <ion-button expand="full" fill="outline" routerDirection="root" [routerLink]="['/iniciar-sesion']">Iniciar sesión</ion-button>
+
+    </ion-col>
+    <!--<ion-col class="ion-align-self-end">
+      ion-col [end]
+    </ion-col>-->
+  </ion-row>
+
+</ion-content>
