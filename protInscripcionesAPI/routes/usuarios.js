@@ -1,26 +1,34 @@
-var express = require('express');
+var express = require(`express`);
 var router = express.Router();
-var DBCONEXION = require('../mod/conexion');
-var USUARIOS = require('../mod/usuarios');
-var VALIDACIONES = require('./util/validaciones');
-var nodemailer = require('nodemailer');
-var bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
-const uuid = require("uuid");
+var nodemailer = require(`nodemailer`);
+var bcrypt = require(`bcrypt`);
+const jwt = require(`jsonwebtoken`);
+const uuid = require(`uuid`);
 
+var DBCONEXION = require(`../mod/conexion`);
+var USUARIOS = require(`../mod/usuarios`);
+var V = require(`./util/validaciones`);
+var H = require(`./util/herramientas`);
+var M = require(`./util/mensajes`);
 
-router.get('/',  async (req, res) => {
+const txtEntidad = `usuario`;
+const datosEmail = {
+	user: `soporte.opoinf@gmail.com`,
+	pass: `xduvlgasasyyblzx`
+};
+
+router.get(`/`,  async (req, res) => {
   
 	var conexion_db = await DBCONEXION.iniciar_conexion();
 	if (!conexion_db) {
 		return res.status(400).json({
 			error: true,
-			mensaje: "Error al comunicarse con la base de datos, comuniquese con el administrador"
+			mensaje: `${M.txtGenericos.errorConexionDB}`
 		});
 	}
 
 	const usuarios = await USUARIOS.getAll(conexion_db, req.body);
-	if (usuarios===false) return res.status(400).json({ error: true, mensajes: 'Error al buscar usuarios' });
+	if (usuarios===false) return res.status(400).json({ error: true, mensajes: `${M.txtGenericos.errorEnBusquedas} ${txtEntidad}s` });
 
 	DBCONEXION.cerrar_conexion(conexion_db);
 
@@ -32,20 +40,20 @@ router.get('/',  async (req, res) => {
   
 });
 
-router.get('/:id',  async (req, res) => {
+router.get(`/:id`,  async (req, res) => {
 
-	if (!req.params.id) return res.status(400).json({ error: true, mensajes: 'Debe indicar el ID' });
+	if (!req.params.id) return res.status(400).json({ error: true, mensajes: `${M.txtGenericos.faltaID}` });
 
 	var conexion_db = await DBCONEXION.iniciar_conexion();
 	if (!conexion_db) {
 		return res.status(400).json({
 			error: true,
-			mensaje: "Error al comunicarse con la base de datos, comuniquese con el administrador"
+			mensaje: `${M.txtGenericos.errorConexionDB}`
 		});
 	}
 
 	const usuario = await USUARIOS.get(conexion_db, { id: req.params.id });
-	if (usuario===false) return res.status(400).json({ error: true, mensajes: 'Error al buscar el usuario' });
+	if (usuario===false) return res.status(400).json({ error: true, mensajes: `${M.txtGenericos.errorAlBuscar} ${txtEntidad}` });
 
 	DBCONEXION.cerrar_conexion(conexion_db);
 
@@ -57,27 +65,27 @@ router.get('/:id',  async (req, res) => {
   
 });
 
-router.post('/iniciar-sesion', async (req, res) => {
+router.post(`/iniciar-sesion`, async (req, res) => {
 	
 	console.log(req.body, req.params, req.body)
 	// Validaciones
-	const { error } = VALIDACIONES.schemaLogin.validate(req.body);
+	const { error } = V.schemaLogin.validate(req.body);
 	if (error) return res.status(400).json({  error: true, mensajes: error.details[0].message })
 
 	var conexion_db = await DBCONEXION.iniciar_conexion();
 	if (!conexion_db) {
 		return res.status(400).json({
 			error: true,
-			mensaje: "Error al comunicarse con la base de datos, comuniquese con el administrador"
+			mensaje: `${M.txtGenericos.errorConexionDB}`
 		});
 	}
 
 	const resultado = await USUARIOS.verificarExistencia(conexion_db, req.body);
-	if (resultado===false) return res.status(400).json({ error: true, mensajes: 'Usuario no encontrado' });
+	if (resultado===false) return res.status(400).json({ error: true, mensajes: `${H.primeraMayuscula(txtEntidad)} ${M.txtGenericos.errorNoEncontrado}` });
 	const usuario = resultado[0];
 
 	const validacioncontrasena = await bcrypt.compare(req.body.contrasena, usuario.contrasena);
-	if (!validacioncontrasena) return res.status(400).json({ error: true, mensajes: 'contraseña incorrecta' })
+	if (!validacioncontrasena) return res.status(400).json({ error: true, mensajes: `${M.txtGenericos.errorContrasenaIncorrecta}` })
 		
 	DBCONEXION.cerrar_conexion(conexion_db);
 
@@ -89,7 +97,7 @@ router.post('/iniciar-sesion', async (req, res) => {
 		id: usuario.id
 	}, process.env.TOKEN_SECRET)
 
-	res.header('auth-token', token).json({
+	res.header(`auth-token`, token).json({
 		error: false,
 		data: {
 			token : token,
@@ -98,23 +106,23 @@ router.post('/iniciar-sesion', async (req, res) => {
 	});
 });
 
-router.post('/registrar',   async (req, res) => {
+router.post(`/registrar`,   async (req, res) => {
 
 	// Validaciones
 	console.log(req.body, req.query, req.params)
-	const { error } = VALIDACIONES.schemaUsuario.validate(req.body);
+	const { error } = V.schemaUsuario.validate(req.body);
 	if (error) return res.status(400).json({  error: true, mensajes: error.details[0].message })
 
 	var conexion_db = await DBCONEXION.iniciar_conexion();
 	if (!conexion_db) {
 		return res.status(400).json({
 			error: true,
-			mensaje: "Error al comunicarse con la base de datos, comuniquese con el administrador"
+			mensaje: `${M.txtGenericos.errorConexionDB}`
 		});
 	}
 
 	const verificarExistencia = await USUARIOS.verificarExistencia(conexion_db, req.body);
-	if (verificarExistencia!=false || verificarExistencia.length>0 ) return res.status(400).json({ error: true, mensaje: 'El usuario ya ha sido registrado' });
+	if (verificarExistencia!=false || verificarExistencia.length>0 ) return res.status(400).json({ error: true, mensaje: `${M.txtGenericos.errorYaExiste} ${txtEntidad}` });
 
 
     // hash contraseña
@@ -125,66 +133,66 @@ router.post('/registrar',   async (req, res) => {
         email: req.body.email,
         contrasena: contrasena
     };
-	const registroNuevo = await USUARIOS.crear(conexion_db, usuario);
-	if (registroNuevo===false) return res.status(400).json({ error: true, error: 'No se pudo realizar el registro ' });	
+	const nuevoRegistro = await USUARIOS.crear(conexion_db, usuario);
+	if (nuevoRegistro===false) return res.status(400).json({ error: true, error: `${M.txtGenericos.errorRegistro}` });	
 
 	DBCONEXION.cerrar_conexion(conexion_db);
 
 
 	res.json({
 		error : false,
-		mensaje : " Registro realizado correctamente ",
-		resultado : registroNuevo
+		mensaje : ` ${M.txtGenericos.registroCorrecto} `,
+		resultado : nuevoRegistro
 	});
 	
 	
 });
 
-router.put('/editar',  async (req, res) => {
+router.put(`/editar`,  async (req, res) => {
 	// Validaciones
-	const { error } = VALIDACIONES.schemaUsuario.validate(req.body);
+	const { error } = V.schemaUsuario.validate(req.body);
 	if (error) return res.status(400).json({  error: true, mensajes: error.details[0].message })
 
 	var conexion_db = await DBCONEXION.iniciar_conexion();
 	if (!conexion_db) {
 		return res.status(400).json({
 			error: true,
-			mensaje: "Error al comunicarse con la base de datos, comuniquese con el administrador"
+			mensaje: `${M.txtGenericos.errorConexionDB}`
 		});
 	}
 
 	const verificarExistencia = await USUARIOS.get(conexion_db, req.body);
-	if (verificarExistencia===false) return res.status(400).json({ error: true, error: 'El usuario no existe' });
+	if (verificarExistencia===false) return res.status(400).json({ error: true, error: `${M.txtGenericos.errorNoExiste} ${txtEntidad}` });
 
 	const registroEditado = await USUARIOS.editar(conexion_db, req.body);
-	if (registroEditado===false) return res.status(400).json({ error: true, error: 'No se pudo realizar la edición ' });	
+	if (registroEditado===false) return res.status(400).json({ error: true, error: `${M.txtGenericos.errorEdicion}` });	
 
 	DBCONEXION.cerrar_conexion(conexion_db);
 
 
 	res.json({
 		error : false,
-		mensaje : " Edición realizada correctamente ",
+		mensaje : ` ${M.txtGenericos.edicionCorrecta} `,
 		resultado : registroEditado
 	});
 });
 
-router.post('/recuperar-contrasena',  async (req, res) => {
+router.post(`/recuperar-contrasena`,  async (req, res) => {
 	// Validaciones
 	console.log(req.body);
-	const { error } = VALIDACIONES.schemaRecuperarContrasena.validate(req.body);
+	const { error } = V.schemaRecuperarContrasena.validate(req.body);
 	if (error) return res.status(400).json({  error: true, mensajes: error.details[0].message })
 
 	var conexion_db = await DBCONEXION.iniciar_conexion();
 	if (!conexion_db) {
 		return res.status(400).json({
 			error: true,
-			mensaje: "Error al comunicarse con la base de datos, comuniquese con el administrador"
+			mensaje: `${M.txtGenericos.errorConexionDB}`
 		});
 	}
 
 	const verificarExistencia = await USUARIOS.verificarExistencia(conexion_db, req.body);
-	if (verificarExistencia===false) return res.status(400).json({ error: true, error: 'El usuario no existe' });
+	if (verificarExistencia===false) return res.status(400).json({ error: true, error: `${M.txtGenericos.errorNoExiste} ${txtEntidad}` });
 
 	console.log(verificarExistencia[0])
 	//DBCONEXION.cerrar_conexion(conexion_db);
@@ -202,24 +210,24 @@ router.post('/recuperar-contrasena',  async (req, res) => {
 		username: verificarExistencia[0].username,
 		contrasena: contrasena,
 	});
-	if (edicionRealizada===false) return res.status(400).json({ error: true, error: 'Error al modificar la contraseña.' });
+	if (edicionRealizada===false) return res.status(400).json({ error: true, error: `${M.txtGenericos.errorModificarContrasena}` });
 
 
 	var transporter = nodemailer.createTransport({
-		service: 'gmail',
+		service: `gmail`,
 		auth: {
-			user: 'soporte.opoinf@gmail.com',
-			pass: 'xduvlgasasyyblzx'
+			user: `${datosEmail.user}`,
+			pass: `${datosEmail.pass}`
 
 		}
 	});
 
 	var mailOptions = {
-		from: '"SOPORTE APP MOVIL" <soporte.opoinf@gmail.com>',
+		from: `${M.txtGenericos.nombreRemitente} <${datosEmail.user}>`,
 		to: req.body.email,
-		subject: 'SOPORTE APP MOVIL: Recuperación de contraseña',
-		text: ' Hola '+verificarExistencia[0].username+', \n' +
-			'		su nueva contraseña es: '+nuevaContrasena+'  \n'
+		subject: `${M.txtGenericos.asuntoEmailRecuperacionContrasena}`,
+		text: ` Hola ${verificarExistencia[0].username}, \n` +
+		`		su nueva contraseña es: ${nuevaContrasena}  \n`
 	}; 
 	transporter.sendMail(mailOptions, function(error, info){
 		if (error) {
@@ -227,63 +235,62 @@ router.post('/recuperar-contrasena',  async (req, res) => {
 		res.json({
 					error : true,
 					error_m : error,
-					message : "No se ha podido enviar el correo."
+					message : `${M.txtGenericos.errorEnviarMensaje}`
 				});									    
 		} else {
 		res.json({
 					error : false,
-					message : "La nueva contraseña ha sido enviada al correo electrónico "+req.body.email+", revísala y utilízala. ",
+					message : `${M.txtGenericos.contrasenaEnviada} `,
 					datos : info.response
 				});										
 		}
 	});
 });
 
-router.put('/borrado-logico',  async (req, res) => {
+router.put(`/borrado-logico`,  async (req, res) => {
 
-	if (!req.body.id) return res.status(400).json({ error: true, mensajes: 'Debe indicar el ID' });
+	if (!req.body.id) return res.status(400).json({ error: true, mensajes: `${M.txtGenericos.faltaID}` });
 
 	var conexion_db = await DBCONEXION.iniciar_conexion();
 	if (!conexion_db) {
 		return res.status(400).json({
 			error: true,
-			mensaje: "Error al comunicarse con la base de datos, comuniquese con el administrador"
+			mensaje: `${M.txtGenericos.errorConexionDB}`
 		});
 	}
 
-	const eliminacionUsuario = await USUARIOS.borradoLogico(conexion_db, { id: req.body.id });
-	if (eliminacionUsuario===false) return res.status(400).json({ error: true, mensajes: 'No se pudo borrar permanentemente el usuario' });
+	const eliminacion = await USUARIOS.borradoLogico(conexion_db, { id: req.body.id });
+	if (eliminacion===false) return res.status(400).json({ error: true, mensajes: `${M.txtGenericos.errorBorradoPermanentemente} ${txtEntidad}` });
 
 	DBCONEXION.cerrar_conexion(conexion_db);
-
-
+	
 	res.json({
 		error : false,
-		data: "Usuario fue borrado permanentemente"
+		data: `${H.primeraMayuscula(txtEntidad)} ${M.txtGenericos.borradoPermanentemente}`
 	});
 });
 
-router.post('/borrado-permanente',  async (req, res) => {
+router.post(`/borrado-permanente`,  async (req, res) => {
 
-	if (!req.body.id) return res.status(400).json({ error: true, mensajes: 'Debe indicar el ID' });
+	if (!req.body.id) return res.status(400).json({ error: true, mensajes: `${M.txtGenericos.faltaID}` });
 
 	var conexion_db = await DBCONEXION.iniciar_conexion();
 	if (!conexion_db) {
 		return res.status(400).json({
 			error: true,
-			mensaje: "Error al comunicarse con la base de datos, comuniquese con el administrador"
+			mensaje: `${M.txtGenericos.errorConexionDB}`
 		});
 	}
 
-	const eliminacionUsuario = await USUARIOS.borradoPermanente(conexion_db, { id: req.body.id });
-	if (eliminacionUsuario===false) return res.status(400).json({ error: true, mensajes: 'No se pudo borrar permanentemente el usuario' });
+	const eliminacion = await USUARIOS.borradoPermanente(conexion_db, { id: req.body.id });
+	if (eliminacion===false) return res.status(400).json({ error: true, mensajes: `${M.txtGenericos.errorBorradoPermanentemente} ${txtEntidad}` });
 
 	DBCONEXION.cerrar_conexion(conexion_db);
 
 
 	res.json({
 		error : false,
-		data: "Usuario fue borrado permanentemente"
+		data: `${H.primeraMayuscula(txtEntidad)} ${M.txtGenericos.borradoPermanentemente}`
 	});
 });
 

@@ -10,7 +10,9 @@ require('dotenv').config()
 
 var indexRouter = require('./routes/index');
 var usuariosRouter = require('./routes/usuarios');
-var anunciosRouter = require('./routes/anuncios');
+var salonClaseRouter = require('./routes/salon-clase');
+var tipoUsuarioRouter = require('./routes/tipo-usuario');
+var tipoPersonaRouter = require('./routes/tipo-persona');
 
 var app = express();
 
@@ -30,6 +32,7 @@ const allowedOrigins = [
   'ionic://localhost',
   'http://localhost',
   'http://localhost:8080',
+  'http://localhost:4200',
   'http://localhost:8100',
 ];
 
@@ -53,7 +56,9 @@ const verificarToken = require('./routes/util/validacion-token');
 //rutas
 app.use('/demo',  indexRouter);
 app.use('/usuarios', cors(corsOptions), usuariosRouter);
-app.use('/anuncios', cors(corsOptions), anunciosRouter)
+app.use('/salon-clase', cors(corsOptions), salonClaseRouter);
+app.use('/tipo-usuario', cors(corsOptions), tipoUsuarioRouter)
+app.use('/tipo-persona', cors(corsOptions), tipoPersonaRouter)
 //app.use('/person', verificarToken, personsRouter);
 
 // catch 404 and forward to error handler

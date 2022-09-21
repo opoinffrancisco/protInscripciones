@@ -1,3 +1,8 @@
+/**
+ * PARA ADAPTAR EL MODELO 
+ * Cambiar el nombre de la tabla
+ * Modificar campos a gestionar en las funciones
+ */
 var MODELO = {};
 var timeout_ = 60000;
 
@@ -5,7 +10,7 @@ var timeout_ = 60000;
 /**
  * 
  * @param {*} connection 
- * @param {*} datos : Filtros
+ * @param {*} datos 
  */
  MODELO.getCountAll = async function(connection, datos)
  {
@@ -13,7 +18,7 @@ var timeout_ = 60000;
  
          try {
  
-             var sql = `SELECT COUNT(*) as total FROM anuncios WHERE eliminado=0 ORDER BY id desc LIMIT 1 OFFSET 0`;
+             var sql = `SELECT COUNT(*) as total FROM persona WHERE eliminado=0 ORDER BY id desc LIMIT 1 OFFSET 0`;
              connection.query(
                  {
                      sql: sql, 
@@ -38,7 +43,7 @@ var timeout_ = 60000;
 /**
  * 
  * @param {*} connection 
- * @param {*} datos : Filtros
+ * @param {*} datos { por_pagina, siguiente }
  */
 MODELO.getAll = async function(connection, datos)
 {
@@ -48,7 +53,7 @@ MODELO.getAll = async function(connection, datos)
             let por_pagina = (datos.por_pagina)? datos.por_pagina : 5;
             let siguiente = (datos.siguiente)? datos.siguiente : 0;
 
-            var sql = `SELECT * FROM anuncios WHERE eliminado=0 ORDER BY id desc LIMIT ${por_pagina} OFFSET ${siguiente}`;
+            var sql = `SELECT * FROM persona WHERE eliminado=0 ORDER BY id desc LIMIT ${por_pagina} OFFSET ${siguiente}`;
             connection.query(
                 {
                     sql: sql, 
@@ -73,14 +78,14 @@ MODELO.getAll = async function(connection, datos)
 /**
  * 
  * @param {*} connection 
- * @param {*} datos 
+ * @param {*} datos { id }
  */
 MODELO.get = async function(connection, datos)
 {
     return new Promise((resolve, reject) => {
         try {
 
-            var sql = `SELECT * FROM anuncios WHERE id=? AND eliminado=0`;
+            var sql = `SELECT * FROM persona WHERE id=? AND eliminado=0`;
             connection.query(
                 {
                     sql: sql, 
@@ -109,7 +114,7 @@ MODELO.get = async function(connection, datos)
 /**
  * 
  * @param {*} connection 
- * @param {*} datos 
+ * @param {*} datos { nombre, dni }
  */
 MODELO.filtrar = async function(connection, datos)
 {
@@ -117,10 +122,8 @@ MODELO.filtrar = async function(connection, datos)
         try {
             var sql = ` SELECT 
                             * 
-                        FROM anuncios 
-                        WHERE ( titulo LIKE '%${datos.titulo}%' OR descripcion LIKE '%${datos.descripcion}%' )
-                            AND eliminado=0  `;
-            
+                        FROM persona 
+                        WHERE (nombre LIKE '%${datos.nombre}%' OR dni LIKE '%${datos.dni}%' ) AND eliminado=0  `;
             connection.query(
                 {
                     sql: sql, 
@@ -128,7 +131,7 @@ MODELO.filtrar = async function(connection, datos)
                 }, 
                 async function (error, resultado) {
                     if (error) {
-                        console.log("ERROR:: MODELO.getFiltro", error);
+                        console.log("ERROR:: MODELO.filtrar", error);
                         resolve(false);
                     } else{
                         resolve(resultado);
@@ -148,18 +151,22 @@ MODELO.filtrar = async function(connection, datos)
 /**
  * 
  * @param {*} connection 
- * @param {*} datos 
+ * @param {*} datos { nombre, apellido, dni, id_tipo_persona, id_salon_clase, id_usuario  }
  */
 MODELO.crear = async function(connection, datos)
 {    
     return new Promise((resolve, reject) => {
         try {
-            var sql = ` INSERT INTO anuncios SET ? `;
+            var sql = ` INSERT INTO persona SET ? `;
             connection.query(
                 sql, 
-                {
-                    titulo: datos.titulo,
-                    descripcion	: datos.descripcion
+                { 
+                    nombre:datos.nombre, 
+                    apellido:datos.apellido, 
+                    dni:datos.dni, 
+                    id_tipo_persona:datos.id_tipo_persona, 
+                    id_salon_clase:datos.id_salon_clase, 
+                    id_usuario:datos.id_usuario
                 }, 
                 async function (error, resultado) {
                     if (error) {
@@ -190,14 +197,22 @@ MODELO.editar = async function(connection, datos)
     return new Promise((resolve, reject) => {
         try {
 
-            var sql = `UPDATE anuncios SET 	titulo=?, descripcion=? WHERE id=? AND usuario_id=?`;
+            var sql =   `UPDATE persona SET 
+                            nombre=?, 
+                            apellido=?,
+                            dni=?,
+                            id_tipo_persona=?,
+                            id_salon_clase=?
+                        WHERE id=?`;
             connection.query(
                 sql, 
                 [
-                    datos.titulo,
-                    datos.descripcion,
-                    datos.id,
-                    datos.usuario_id
+                    datos.nombre, 
+                    datos.apellido, 
+                    datos.dni, 
+                    datos.id_tipo_persona, 
+                    datos.id_salon_clase, 
+                    datos.id 
                 ], 
                 async function (error, resultado) {
                     if (error) {
@@ -225,7 +240,7 @@ MODELO.borradoLogico = async function(connection, datos)
     return new Promise((resolve, reject) => {
         try {
 
-            var sql = `UPDATE anuncios SET eliminado=1 WHERE id=?`;
+            var sql = `UPDATE persona SET eliminado=1 WHERE id=?`;
             connection.query(
                 sql, 
                 [
@@ -257,7 +272,7 @@ MODELO.borradoPermanente = async function(connection, datos)
     return new Promise((resolve, reject) => {
         try {
 
-            var sql = `DELETE FROM anuncios WHERE id =`+ datos.id;
+            var sql = `DELETE FROM persona WHERE id =`+ datos.id;
             connection.query(
                 sql, 
                 async function (error, resultado) {
